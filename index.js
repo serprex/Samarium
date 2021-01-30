@@ -3,8 +3,19 @@ const pov = document.getElementById('pov');
 const info = document.getElementById('info');
 const keystate = {};
 const pstate = { x: 0, y: 0, dir: 0, speed: 0, accel: 0, mass: 100 };
+const circle = [];
+for (let i = 0; i < 182; i++) {
+	const r = (Math.PI * i) / 90;
+	circle.push(
+		500 + 100 * Math.cos(r),
+		500 + 100 * Math.sin(r),
+		500 + 300 * Math.cos(r),
+		500 + 300 * Math.sin(r),
+	);
+}
 // prettier-ignore
 const roads = [
+	circle,
 	[
 		-10, 0, 10, 0, 
 		-10, 1000, 10, 1000,
@@ -59,8 +70,6 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keypress', e => {
 	if (e.key === '`') {
 		canvas.style.display = canvas.style.display === 'none' ? '' : 'none';
-	} else {
-		console.log(e, e.key, e.charCode);
 	}
 });
 
@@ -144,19 +153,27 @@ function render() {
 		for (let i = 0; i < road.length; i += 4) {
 			const [ri0, ri1] = rotate(road[i + 0], road[i + 1]);
 			const [ri2, ri3] = rotate(road[i + 2], road[i + 3]);
-			vertices.push(ri0, -0.5, ri1);
-			vertices.push(ri2, -0.5, ri3);
+			const [ri4, ri5] = rotate(road[i + 4], road[i + 5]);
+			const [ri6, ri7] = rotate(road[i + 6], road[i + 7]);
+			vertices.push(ri0, -1, ri1);
+			vertices.push(ri2, -1, ri3);
+			vertices.push(ri4, -1, ri5);
+			vertices.push(ri6, -1, ri7);
 			if (i & 8) {
+				colors.push(0, 1, 1);
+				colors.push(0, 1, 1);
 				colors.push(0, 1, 1);
 				colors.push(0, 1, 1);
 			} else {
 				colors.push(1, 0, 1);
 				colors.push(1, 0, 1);
+				colors.push(1, 0, 1);
+				colors.push(1, 0, 1);
 			}
-			vl += 2;
+			vl += 4;
 			if (i > 0) {
 				indices.push(vl - 4, vl - 3, vl - 2);
-				indices.push(vl - 4, vl - 2, vl - 1);
+				indices.push(vl - 3, vl - 2, vl - 1);
 			}
 		}
 	}
