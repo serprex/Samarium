@@ -1,8 +1,11 @@
 const canvas = document.getElementById('canvas');
 const pov = document.getElementById('pov');
+const msgto = document.getElementById('msgto');
+const msgtext = document.getElementById('msgtext');
 const info = document.getElementById('info');
 const keystate = {};
 const pstate = { x: 0, y: 0, dir: 0, speed: 0, accel: 0, mass: 100 };
+const tstate = { texts: [], people: [], facts: new Map() };
 const circle = [];
 for (let i = 0; i < 182; i++) {
 	const r = (Math.PI * i) / 90;
@@ -41,13 +44,13 @@ for (let i = 0; i < 20; i++) {
 }
 document.addEventListener('keyup', e => {
 	if (e.key.startsWith('Arrow')) e.preventDefault();
-	if (e.key == 'ArrowLeft') {
+	if (e.key === 'ArrowLeft') {
 		keystate.left = false;
-	} else if (e.key == 'ArrowRight') {
+	} else if (e.key === 'ArrowRight') {
 		keystate.right = false;
-	} else if (e.key == 'ArrowUp') {
+	} else if (e.key === 'ArrowUp') {
 		keystate.up = false;
-	} else if (e.key == 'ArrowDown') {
+	} else if (e.key === 'ArrowDown') {
 		keystate.down = false;
 	} else {
 		keystate[e.key] = false;
@@ -55,20 +58,48 @@ document.addEventListener('keyup', e => {
 });
 document.addEventListener('keydown', e => {
 	if (e.key.startsWith('Arrow')) e.preventDefault();
-	if (e.key == 'ArrowLeft') {
+	if (e.key === 'ArrowLeft') {
 		keystate.left = true;
-	} else if (e.key == 'ArrowRight') {
+	} else if (e.key === 'ArrowRight') {
 		keystate.right = true;
-	} else if (e.key == 'ArrowUp') {
+	} else if (e.key === 'ArrowUp') {
 		keystate.up = true;
-	} else if (e.key == 'ArrowDown') {
+	} else if (e.key === 'ArrowDown') {
 		keystate.down = true;
 	} else {
 		keystate[e.key] = true;
 	}
 });
 document.addEventListener('keypress', e => {
-	if (e.key === '`') {
+	if (e.key === 'Enter') {
+		const number = msgto.value.trim().toLowerCase();
+		const msg = msgtext.value.trim().toLowerCase();
+		msgtext.value = '';
+		for (let i = 0; i < tstate.people.length; i++) {
+			const person = tstate.people[i];
+			if (person.number === number) {
+				for (const text of tstate.texts) {
+					if (text.from === person && text.open) {
+						if (text.answer === msg) {
+							text.open = false;
+							text.dom.remove();
+						}
+					}
+				}
+				if (
+					msg.includes('fav ') ||
+					msg.includes('favorite ') ||
+					msg.includes('favourites ')
+				) {
+					for (const name of FactNames) {
+						if (msg.includes(name)) {
+							person.ask.push(name);
+						}
+					}
+				}
+			}
+		}
+	} else if (e.key === '`') {
 		canvas.style.display = canvas.style.display === 'none' ? '' : 'none';
 	}
 });
@@ -220,8 +251,144 @@ function render() {
 	).toFixed(2)} ${pstate.speed.toFixed(2)} ${pstate.accel.toFixed(2)} ${vl}`;
 	requestAnimationFrame(render);
 }
-
 requestAnimationFrame(render);
+
+const FactItems = {
+	book: [
+		'atlas shrugged',
+		'catcher in the rye',
+		'fountainhead',
+		'gone with the wind',
+		'red rising',
+		'slaughterhouse five',
+		'tarantula',
+		'ulysses',
+	],
+	fruit: ['apple', 'banana', 'cantaloupe', 'kiwi', 'orange'],
+	movie: [
+		'amelie',
+		'bladerunner',
+		'cast away',
+		'fear and loathing',
+		'hot tub time machine',
+		'pulp fiction',
+	],
+};
+const FactNames = Object.keys(FactItems);
+const EmptyGreetings = [
+	'hi',
+	'hey',
+	'how are you?',
+	'how are things?',
+	"how's it going?",
+	'sup',
+	"what's up?",
+	'yo',
+];
+const PeopleNames = [
+	'Amelie',
+	'Angela',
+	'Beth',
+	'Brenda',
+	'Carrie',
+	'Christine',
+	'Debra',
+	'Drew',
+	'Esther',
+	'Ethan',
+	'Feng',
+	'Freya',
+	'Gordon',
+	'Gwen',
+	'Hara',
+	'Helen',
+	'Ian',
+	'Isaiah',
+	'Jade',
+	'Jocelyn',
+	'Katherine',
+	'Kane',
+	'Lee',
+	'Liam',
+	'Mark',
+	'Molly',
+	'Natasha',
+	'Noam',
+	'Olivia',
+	'Osamu',
+	'Pavel',
+	'Penelope',
+	'Quinn',
+	'Ren',
+	'Sarah',
+	'Teresa',
+	'Ulysses',
+	'Venesa',
+	'Wednesday',
+	'Xavier',
+	'Yvette',
+	'Zoe',
+];
+const AreaCodes = [];
+for (let i = 0; i < 3; i++) {
+	let code = '';
+	for (let i = 0; i < 3; i++) code += (Math.random() * 10) | 0;
+	AreaCodes.push(code);
+}
+
+const UsedNames = new Set();
+for (let i = 0; i < 12; i++) {
+	let name;
+	do {
+		name = PeopleNames[(PeopleNames.length * Math.random()) | 0];
+	} while (UsedNames.has(name));
+	UsedNames.add(name);
+	let number = AreaCodes[(AreaCodes.length * Math.random()) | 0];
+	for (let i = 0; i < 4; i++) {
+		number += (Math.random() * 10) | 0;
+	}
+	const favorite = new Map();
+	for (const category of FactNames) {
+		favorite.set(
+			category,
+			FactItems[category][(FactItems[category].length * Math.random()) | 0],
+		);
+	}
+	tstate.people.push({
+		name,
+		number,
+		favorite,
+		ask: [],
+	});
+}
+
+function createText({ from, text, answer, timeout }) {
+	if (!text) return;
+	const id = tstate.texts.length;
+	const dom = document.createElement('div');
+	const x = (600 * Math.random()) | 0;
+	const y = (550 * Math.random()) | 0;
+	dom.style.position = 'absolute';
+	dom.style.left = `${x}px`;
+	dom.style.top = `${y}px`;
+	dom.style.maxWidth = `${800 - x}px`;
+	dom.style.zIndex = '1';
+	dom.textContent = text;
+	dom.addEventListener('click', () => {
+		msgto.value = from.number;
+		msgtext.value = '';
+	});
+	const tdata = { id, from, dom, open: true };
+	if (timeout) {
+		setTimeout(() => {
+			tdata.open = false;
+			dom.remove();
+		}, timeout);
+	}
+	document.body.appendChild(dom);
+	tstate.texts[id] = text;
+}
+
 setInterval(() => {
 	if (keystate.up) {
 		pstate.accel = 5 / 60;
@@ -251,4 +418,51 @@ setInterval(() => {
 	const dy = Math.sin(pstate.dir) * pstate.speed;
 	pstate.x += dx;
 	pstate.y += dy;
+	if (Math.random() < 0.01) {
+		const person = tstate.people[(tstate.people.length * Math.random()) | 0];
+		const ask = person.ask.pop();
+		if (ask) {
+			createText({
+				from: person,
+				text: `${person.name}: my favorite ${ask} is ${person.favorite.get(
+					ask,
+				)}, what's yours?`,
+				timeout: 8000,
+			});
+		}
+	}
+	if (Math.random() < 0.003) {
+		let text = null,
+			answer = null,
+			timeout = null;
+		const from = tstate.people[(tstate.people.length * Math.random()) | 0];
+		const r = Math.random();
+		if (r < 0.05) {
+			const category = FactNames[(FactNames.length * Math.random()) | 0];
+			const curious = tstate.people[(tstate.people.length * Math.random()) | 0];
+			if (curious !== from) {
+				answer = curious.favorite.get(category);
+				text = `${from.name}: do you know ${curious.name}'s favorite ${category}?`;
+			}
+		} else if (r < 0.1) {
+			const category = FactNames[(FactNames.length * Math.random()) | 0];
+			const curious = tstate.people[(tstate.people.length * Math.random()) | 0];
+			if (curious !== from) {
+				answer = curious.number;
+				text = `${from.name}: what's ${curious.name}'s number?`;
+			}
+		} else if (r < 0.15) {
+			const category = FactNames[(FactNames.length * Math.random()) | 0];
+			text = `${from.name}: my favorite ${category} is ${from.favorite.get(
+				category,
+			)}, what's yours?`;
+			timeout = 8000;
+		} else {
+			text = `${from.name}: ${
+				EmptyGreetings[(EmptyGreetings.length * Math.random()) | 0]
+			}`;
+			timeout = 8000;
+		}
+		createText({ from, text, answer, timeout });
+	}
 }, 15);
